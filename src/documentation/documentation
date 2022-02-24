@@ -1,0 +1,14 @@
+src folder:
+components folder:
+Smoker.js
+    const Smoker:connect to SmokerMap.js
+SmokerMap.js
+SmokerMap.css
+    constructor: handle inital setup of defaulting properties of the object map
+
+App.css
+App.js
+    function App: connect to Smoker.js
+
+
+
