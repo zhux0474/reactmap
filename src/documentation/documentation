@@ -1,14 +1,47 @@
-src folder:
-components folder:
-Smoker.js
-    const Smoker:connect to SmokerMap.js
-SmokerMap.js
-SmokerMap.css
-    constructor: handle inital setup of defaulting properties of the object map
 
-App.css
-App.js
-    function App: connect to Smoker.js
+Reactmap:
+src folder:
+- components folder:
+    1. Smoker.js
+        const Smoker:connect to SmokerMap.js
+    2. SmokerMap.js
+        To define a React component class, need to extend React.Component
+        subclass render()
+
+        constructor: 
+            is called before component is mounted
+            handle inital setup of defaulting properties of the object map
+            access DOM element in a component and returns a mutable ref object 
+            assign inital state here (this.state =...)
+            only place where you should assign this.state directly
+            in all other method, need to use this.setState()
+
+        componentDidMount():
+            is invoked right after a comonent is mounted(inserted into the tree).
+            (a place to instantiate network request if need to load data from a remote endpoint)
+            if call setState() immediately here, will trigger an extrac rendering (render()will be called twice in this case too)
+
+        componentDidUpdate()
+            is invoked right after updating occurs
+            (also a good place to do network reuqests as long as compare the current props to previous prop,network request may not be necessary if the props have not changed)
+            example:
+            componentDidUpdate(prevProps) {
+            // Typical usage (don't forget to compare props):
+                if (this.props.userID !== prevProps.userID) {
+             this.fetchData(this.props.userID);
+                }
+                }
+        
+        render(): 
+            required in a class component, return the same results each time, does not modify componenet state, does not directly interact with browser
+            keep it pure
+
+    3. SmokerMap.css
+        
+
+    4. App.css
+    5. App.js
+        function App: connect to Smoker.js
 
 
 

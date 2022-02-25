@@ -4,7 +4,7 @@ import LoadData from "../tasks/LoadData";
 
 
 const Smoker = () =>{
-    const [counties, setCounties] = useState([]);
+    //const [counties, setCounties] = useState([]);
     /*
     const load = () =>{
         console.log("load");

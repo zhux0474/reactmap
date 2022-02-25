@@ -11,7 +11,7 @@ import VectorSource from "ol/source/Vector";
 import GeoJSON from 'ol/format/GeoJSON';
 import OSM from "ol/source/OSM";
 import {Fill, Stroke, Style} from 'ol/style';
-import cityboundary from "./City_Boundary.geojson";
+import cityboundary from "./Minneapolis_Police_Precincts.geojson";
 //import county from "./County.json";
 
 /*
@@ -43,10 +43,8 @@ export default class SmokerMap extends React.Component{
   componentDidMount(){
     this.map=new Map({
       target: "mapContainer",
-      
       layers: [
-     
-
+  
         new TileLayer({
           source: new OSM()
         }),
@@ -60,6 +58,7 @@ export default class SmokerMap extends React.Component{
             //featureProjection:"EPSG:4326"
           }),
           style: new Style({
+            //need to add stuff here to style the polygon 
             fill: new Fill({
               color: [255,0,0,255]}),//'#eeeeee' [255,0,0,255]
             
