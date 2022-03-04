@@ -21,6 +21,17 @@ src folder:
             (a place to instantiate network request if need to load data from a remote endpoint)
             if call setState() immediately here, will trigger an extrac rendering (render()will be called twice in this case too)
 
+                -basemap: osm
+                -vector style (style that could be added to vector layer)
+                -total smoker(vector source,will be added to vector layer): geojson layer from GeoServer
+                -vector layer   1 source: totalsmoker,
+                                2 style: vectorstyle
+                -lungdata: wms tile layer from GeoServer
+
+                
+
+
+
         componentDidUpdate()
             is invoked right after updating occurs
             (also a good place to do network reuqests as long as compare the current props to previous prop,network request may not be necessary if the props have not changed)
@@ -37,8 +48,6 @@ src folder:
             keep it pure
 
     3. SmokerMap.css
-        
-
     4. App.css
     5. App.js
         function App: connect to Smoker.js
