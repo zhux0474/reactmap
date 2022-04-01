@@ -1,35 +1,22 @@
 import React, { useState, useEffect } from "react"
 import SmokerMap from "./SmokerMap";
+import "./Smoker.css";
+import SmokerLegend from "./SmokerLegend";
 import LoadData from "../tasks/LoadData";
+import Dropdown from "./dropdown.js"
 
 
 const Smoker = () =>{
-    //const [counties, setCounties] = useState([]);
-    /*
-    const load = () =>{
-        console.log("load");
-        const loadData = new LoadData();
-        loadData.load((counties)=> setCounties(counties));
-
-    };
-    
-    useEffect(load,[]);
-    
-    below is the code go inside the div below
-    {counties.length === 0 ?(
-                <Loading />):(
-                    <div>
-                        <SmokerMap counties = {counties} />
-                
-                        </div>
-                )}  */
-
     return (
-        <div>
-            
-            <SmokerMap />
-            
+        <div >
+            <div style={{height: '400px'}}>
+                <SmokerMap  />
             </div>
+            <div style={{position: 'relative' }} >
+                <SmokerLegend/> 
+                <Dropdown/> 
+            </div>
+        </div>
     );
 
 };
