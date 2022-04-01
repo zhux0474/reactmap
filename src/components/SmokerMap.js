@@ -17,7 +17,7 @@ import {metadata} from './metadata.js';
 
 //import ImageWMS from 'ol/source/ImageWMS';
 
-
+//for new push
 
 export default class SmokerMap extends React.Component{
   constructor(props){

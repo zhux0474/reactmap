@@ -5,7 +5,7 @@ function App() {
   // Array of objects containing data
   var attributes = []
   for (var i =0; i<metadata.attributename.length;i++) {
-    attributes.push( { label: metadata.attributename[i], value: metadata.geojson_url[0]}); 
+    attributes.push( { label: metadata.attributename[i], value: metadata.geojson_url[i]}); 
   }
   
 
@@ -25,7 +25,7 @@ var handleAttributeChange = (e) => {
     <br />
 
     <select onChange={handleAttributeChange}> 
-      <option value=" Select an attribute to display"> -- Select an attribute -- </option>
+      <option value=" Select an attribute"> -- Select an attribute -- </option>
       
       {attributes.map((attribute) => <option value={attribute.value}> {attribute.label}</option>)}
     </select>
