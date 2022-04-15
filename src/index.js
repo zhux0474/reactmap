@@ -4,17 +4,22 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {Provider} from "./components/context.js"
 
 ReactDOM.render(
- 
+
+  //wrap the App in <Provider> tags.
+  //ensure that the entire app has access to data in the Context file.
+ <Provider>
     <App />
+ </Provider>
 
   ,document.getElementById('root')
 );
 
 const title = (
   <div>
-    <h1>React Webmap Smokers in Minnesota</h1>
+    <h1>Tobacco Smokers Rate in Minnesota</h1>
   </div>
 )
 

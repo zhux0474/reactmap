@@ -4,6 +4,26 @@ src folder:
 - components folder:
     1. Smoker.js
         const Smoker:connect to SmokerMap.js
+    3. context.js
+
+    use: createContext function from React to create a new Context. 
+    A Context has a Provider component and a Consumer component.
+      Context.Provider:
+        The Provider component accepts a value prop to be passed to consuming components that are descendants of this Provider. 
+        One Provider can be connected to many consumers. 
+        Providers can be nested to override values deeper within the tree.
+        All consumers that are descendants of a Provider will re-render whenever the Provider’s value prop changes. 
+       
+       The Provider is a component that sets the data and then wraps some child components. 
+       Any wrapped child components will have access to data from the Provider with the useContext Hook.
+
+      Context.Consumer:
+        Requires a function as a child. 
+        The function receives the current context value and returns a React node. 
+        The value argument passed to the function will be equal to the value prop of the closest Provider for this context above in the tree.
+        If there is no Provider for this context above, the value argument will be equal to the defaultValue that was passed to createContext().
+
+
     2. SmokerMap.js
         To define a React component class, need to extend React.Component
         subclass render()
