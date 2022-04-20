@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { fromLonLat, get } from "ol/proj";
 //import "./SmokerMap.css";
 import Map from "ol/Map";
@@ -24,6 +24,8 @@ import { useContext } from "react";
 export default class SmokerMap extends React.Component{
 
   static contextType = Context;
+  //context=this.context;
+  
   
   constructor(props){
     super(props);
@@ -38,13 +40,11 @@ export default class SmokerMap extends React.Component{
   };
    // console.log(this.props);
   }
-
-  
-
-
   
   componentDidMount(){
-  
+    //this.getJSON();
+    
+    //const [data,setdata]=useState(data);
     const context=this.context;
     console.log(context);
     // get the current value in UsersContext through the hook
@@ -53,11 +53,25 @@ export default class SmokerMap extends React.Component{
     })
     var smokerSource = new VectorSource({
       url: context.state.attribute,//metadata[1].geojson_url,
-      
       format: new GeoJSON()
     })
     console.log("source is:",context.state.attribute)
-   
+    
+   //pass context.state.attribute into some function to get new json
+   //store json as a variable 
+/*
+   const getData=()=>{
+    fetch(context.state.attribute)
+      .then(function(response){
+        console.log(response)
+        return response.json();
+      })
+      .then(function(myJson) {
+        console.log(myJson);
+      });
+  }*/
+
+
 
     var countyOutlineSource = new VectorSource({
       url: countyData,
@@ -76,12 +90,47 @@ export default class SmokerMap extends React.Component{
       source: countyOutlineSource,
       style: countyBorder
     })
-
+/*
+    async function getData(url) {
+      const response = await fetch(url);
     
-  
+      return response.json();
+    }
+    
+    const data = getData(context.state.attribute);
+    var obj;
+    //console.log( {data} )
+    function getjsondata() {
+      return fetch(context.state.attribute)
+      //.then((response) => response.json())
+      .then(res => res.json())
+      .then(data => obj = data)
+      .then(() => console.log(obj))
+    
+   }*/
+   
+    /*
+    const getjson=()=>{
+      fetch(context.state.attribute)
+      .then(function(response){
+        //console.log(response)
+        return response.json();
+      })
+      .then(function(myJson){
+        console.log(myJson);
+
+      });
+
+
+    }
+    */
+
+    //var jsondata= getData();
+    //console.log(jsondata);
     var stylefunction = function(feature){
+      
         var style;
-        console.log(feature);
+        //console.log(feature);
         
         //var value=feature.get('brfss_smoker');
         //var geojson1={geoid:23,value:16},{geoid:50,value:25}
@@ -90,23 +139,34 @@ export default class SmokerMap extends React.Component{
         //var county=feature.get('county');
         //var value = feature.get('brfss_smoker');
         var geoid=feature.get('geo_id');
+        for (var i=0; i<feature.length;i++){
+          var newgeoid=feature[i].values.geo_id;
+          //console.log(newgeoid);
+          if (newgeoid===geoid ){
+            var value= feature[i].values.brfss_smoker;
+           };
+        }
        //console.log("geoid",geoid);
         //console.log(value);
         //console.log(Object.keys(geoid));
        // const newgeoid = Whitesmoker.map((id)=> {
          // var white=Whitesmoker.get('geo_id');
           //console.log(white);
+          /*
+          for sample
+          var geoid=feature.get('geo_id');
         for (var i=0; i<Whitesmoker.features.length;i++){
             var newgeoid=Whitesmoker.features[i].properties.geo_id;
             //console.log(newgeoid);
             if (newgeoid===geoid ){
               var value= Whitesmoker.features[i].properties.brfss_smoker;
              };
-          }
+          }*/
         //console.log(value)
         
         
-        
+        //var jsondata= getData();
+        //console.log(jsondata);
         
         //compare geoid with the next json
         // mapping function or a for loop to find the matching value
@@ -159,24 +219,66 @@ export default class SmokerMap extends React.Component{
       countyOutline: countyOutline,
       smokerlayer: smokerlayer,
       smokerSource:smokerSource
+      
   })
 
   
   
 
 }
-
-
-  componentDidUpdate(){
-    const context=this.context;
-    console.log("update:",context)
+componentDidUpdate(){
+  const context=this.context;
+  console.log("update:",context)
+  const getData=()=>{
+    fetch(context.state.attribute)
+      .then(function(response){
+        console.log(response)
+        return response.json();
+      })
+      .then(function(myJson) {
+        console.log(myJson);
+      });
   }
+  var jsondata= getData();
+    console.log(jsondata);
+  
+}
+/*
+  componentDidUpdate(prevProps,prevState){
+    //console.log(this.props)
+    if (prevProps.api != this.props.api){
+      
+      //console.log(prevState.smokerSource)
+      const context=this.context;
+      console.log("update:",context)
+      const getjson=()=>{
+        fetch(context.state.attribute)
+        .then(function(response){
+          //console.log(response)
+          return response.json();
+        })
+        .then(function(myJson){
+          //console.log(myJson);
+  
+        });
+  
+  
+      }
+    
+    }
+    
+      
+      
+  }*/
+    
+  
+  
 
   
 
   
   render() {
-    console.log("-> render App");
+    //console.log("-> render App");
     //console.log("before return",this.state)
     return (
       console.log("after return",this.state),
@@ -185,7 +287,7 @@ export default class SmokerMap extends React.Component{
 
         {(context)=>(
 
-          <p>{context.state.season}</p>
+          <p>{context.state.attribute}</p>
         )}
       
       </Context.Consumer>,

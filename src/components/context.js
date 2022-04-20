@@ -34,7 +34,7 @@ export class Provider extends React.Component{
         
     }
 
-
+    
     render(){
         
         //within the value, set state to be "this.state"
@@ -42,15 +42,25 @@ export class Provider extends React.Component{
 
         return(
             console.log(this.state),
+            async function getData(url){
+                const response =await fetch(url);
+                return response.json()
+            },
+            
             //handleChange function sets the state of season to event.target.value 
             //which is the option from dropdown
             <Context.Provider value ={{
                 state:this.state,
-
+                
                 //handleChange function sets the state of 'season' to 'event.target.value' 
                 //(the option selected from the dropdown).
                 handleChange: (event) => this.setState({
-                    attribute: event.target.value
+                    attribute: event.target.value,
+                   
+                    //data: ()=>{const response = fetch(this.state.attribute)
+                    //return response.json()}
+
+
                 }),
                 
 
