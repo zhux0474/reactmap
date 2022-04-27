@@ -24,13 +24,16 @@ import { useContext } from "react";
 export default class SmokerMap extends React.Component{
 
   static contextType = Context;
-  //context=this.context;
+  
+  context=this.context;
+  //var oldgeoid={};
+  
   
   
   constructor(props){
     super(props);
     this.state = {
-     
+      oldgeoid:null,
       smokerSource : null,
       smokerlayer: false,
       countyOutlineSource: null,
@@ -41,10 +44,99 @@ export default class SmokerMap extends React.Component{
    // console.log(this.props);
   }
   
+  //global function（styledata） to style map 
+  // will be called in componentDidMount and componentDidUpdate
+  styledata(feature){
+
+    var style;
+    //console.log(feature)
+    var value=feature.get('brfss_smoker')
+    //this.oldgeoid=feature.get('geo_id');
+    //console.log(this.oldgeoid)
+    //console.log(feature.get('geo_id'))
+    //for (var i=0; i<feature.length;i++){
+      //var newgeoid=feature[i].values.geo_id;
+      //console.log(newgeoid);
+      //if (newgeoid===this.oldgeoid ){
+        //var value= feature[i].values.brfss_smoker;
+       //};
+    //}
+
+    for (let i =0;i<metadata[1]['break'].length;i++){
+      if(value>metadata[1]['break'][i]){
+      style= new Style({
+        fill: new Fill({
+          color: metadata[1]['color'][i]
+        }),
+        stroke: new Stroke({
+          color:'black',
+          width:0.3
+        })
+      })
+    };
+  }
+
+    return style;
+
+  }
+  //a global function(getData) to get json data from url when called from componentDidUpdate 
+  async getData(url) {
+    const response = await fetch(url);
+    //console.log(this.oldgeoid)
+
+    //const json=JSON.stringify(response);
+    //return json;
+    //console.log(await response.json())}
+    var jsondata=await response.json()
+    console.log(jsondata)
+    this.styledata(jsondata)
+
+  }
+    //return jsondata;}
+/*
+    for (var i=0;i<jsondata.features.length;i++){
+      var newgeoid=jsondata.features[i]['properties']['geo_id']
+      var value=jsondata.features[i]['properties']['brfss_smoker']
+      //if (newgeoid=oldgeoid)
+    }
+    console.log(jsondata.features[0]['properties']['geo_id'])
+
+    //return await response.json();
+  };*/
+  /*
+  stylefunction(feature){
+    var style;
+    //console.log(feature.features)
+    var geoid=feature.get('geo_id');
+    //var geoid=feature.features
+    for (var i=0; i<feature.length;i++){
+    var newgeoid=feature[i].values.geo_id;
+        //console.log(newgeoid);
+    if (newgeoid===geoid ){
+      var value= feature[i].values.brfss_smoker;
+         };
+      }
+    for (let i =0;i<metadata[1]['break'].length;i++){
+      if(value>metadata[1]['break'][i]){
+      style= new Style({
+      fill: new Fill({
+      color: metadata[1]['color'][i]
+          }),
+          stroke: new Stroke({
+            color:'black',
+            width:0.3
+          })
+        })
+      };
+    }
+
+      return style;
+
+  };*/
+
+  
   componentDidMount(){
-    //this.getJSON();
     
-    //const [data,setdata]=useState(data);
     const context=this.context;
     console.log(context);
     // get the current value in UsersContext through the hook
@@ -52,26 +144,13 @@ export default class SmokerMap extends React.Component{
       source: new OSM()
     })
     var smokerSource = new VectorSource({
-      url: context.state.attribute,//metadata[1].geojson_url,
+      url: metadata[1].geojson_url, //context.state.attribute,
       format: new GeoJSON()
     })
     console.log("source is:",context.state.attribute)
     
-   //pass context.state.attribute into some function to get new json
+   //need to pass context.state.attribute into some function to get new json
    //store json as a variable 
-/*
-   const getData=()=>{
-    fetch(context.state.attribute)
-      .then(function(response){
-        console.log(response)
-        return response.json();
-      })
-      .then(function(myJson) {
-        console.log(myJson);
-      });
-  }*/
-
-
 
     var countyOutlineSource = new VectorSource({
       url: countyData,
@@ -89,55 +168,23 @@ export default class SmokerMap extends React.Component{
       //visible: this.props.viewed === 'County',
       source: countyOutlineSource,
       style: countyBorder
-    })
-/*
-    async function getData(url) {
-      const response = await fetch(url);
+    });
+
     
-      return response.json();
-    }
     
-    const data = getData(context.state.attribute);
-    var obj;
-    //console.log( {data} )
-    function getjsondata() {
-      return fetch(context.state.attribute)
-      //.then((response) => response.json())
-      .then(res => res.json())
-      .then(data => obj = data)
-      .then(() => console.log(obj))
-    
-   }*/
-   
-    /*
-    const getjson=()=>{
-      fetch(context.state.attribute)
-      .then(function(response){
-        //console.log(response)
-        return response.json();
-      })
-      .then(function(myJson){
-        console.log(myJson);
 
-      });
-
-
-    }
-    */
-
-    //var jsondata= getData();
-    //console.log(jsondata);
     var stylefunction = function(feature){
       
         var style;
         //console.log(feature);
         
-        //var value=feature.get('brfss_smoker');
+        var value=feature.get('brfss_smoker');
         //var geojson1={geoid:23,value:16},{geoid:50,value:25}
         //var geojson2={geoid:27,value:55},{geoid:55,value:25},{geoid:63,value:16},{geoid:23,value:25},{geoid:99,value:16},{geoid:50,value:65}
 
         //var county=feature.get('county');
         //var value = feature.get('brfss_smoker');
+        
         var geoid=feature.get('geo_id');
         for (var i=0; i<feature.length;i++){
           var newgeoid=feature[i].values.geo_id;
@@ -195,10 +242,16 @@ export default class SmokerMap extends React.Component{
     var smokerlayer = new VectorLayer({
 
        source: smokerSource,
-       style: stylefunction,
-       //showLegend:true
+       style: stylefunction
+       //need to figure out how to update this style
 
        })
+
+       //a function to get geoid but doesnt work
+       var getgeoid = function(feature){
+        var geoid=feature.get('geo_id');
+        console.log(geoid)
+        return geoid}
 
     var olmap=new Map({
       layers: [basemap,countyOutline,smokerlayer],
@@ -213,7 +266,7 @@ export default class SmokerMap extends React.Component{
     });
 
     this.setState({
-      
+      oldgeoid: getgeoid,
       olmap: olmap,
       countyOutlineSource:countyOutlineSource,
       countyOutline: countyOutline,
@@ -226,22 +279,31 @@ export default class SmokerMap extends React.Component{
   
 
 }
+
+
 componentDidUpdate(){
   const context=this.context;
-  console.log("update:",context)
-  const getData=()=>{
-    fetch(context.state.attribute)
-      .then(function(response){
-        console.log(response)
-        return response.json();
-      })
-      .then(function(myJson) {
-        console.log(myJson);
-      });
-  }
-  var jsondata= getData();
-    console.log(jsondata);
+  console.log("update:",context.state.attribute)
+  console.log(this.state.smokerSource)
   
+  var jsondata= this.getData(context.state.attribute);
+  console.log(jsondata);
+  //this.styledata(jsondata);
+
+  
+  /*
+  this.setState({
+     smokerlayer : new VectorLayer({  
+      style: this.styledata})
+    })*/
+  
+  //this.stylefunction(jsondata);
+    //const printAddress = async () => {
+      //const a = jsondata;
+      //const jsonn=JSON.stringify(a)
+      //console.log(a);
+    //};
+    //printAddress();
 }
 /*
   componentDidUpdate(prevProps,prevState){
