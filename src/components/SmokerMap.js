@@ -33,9 +33,10 @@ export default class SmokerMap extends React.Component{
   constructor(props){
     super(props);
     this.state = {
-      oldgeoid:null,
+      
       smokerSource : null,
       smokerlayer: false,
+      stylefunction: null,
       countyOutlineSource: null,
       countyOutline: false,
       countyReady: false
@@ -46,11 +47,14 @@ export default class SmokerMap extends React.Component{
   
   //global function（styledata） to style map 
   // will be called in componentDidMount and componentDidUpdate
+  //static geojsondata =metadata[1].geojson_url; 
   styledata(feature){
 
-    var style;
+    var thestyle;
     //console.log(feature)
-    var value=feature.get('brfss_smoker')
+    var value=feature.get('brfss_smoker');
+    //var testvalue = 6
+    //console.log(value)
     //this.oldgeoid=feature.get('geo_id');
     //console.log(this.oldgeoid)
     //console.log(feature.get('geo_id'))
@@ -64,7 +68,7 @@ export default class SmokerMap extends React.Component{
 
     for (let i =0;i<metadata[1]['break'].length;i++){
       if(value>metadata[1]['break'][i]){
-      style= new Style({
+      thestyle= new Style({
         fill: new Fill({
           color: metadata[1]['color'][i]
         }),
@@ -75,21 +79,44 @@ export default class SmokerMap extends React.Component{
       })
     };
   }
-
-    return style;
+    //console.log(thestyle)
+    return thestyle;
 
   }
   //a global function(getData) to get json data from url when called from componentDidUpdate 
-  async getData(url) {
-    const response = await fetch(url);
-    //console.log(this.oldgeoid)
+  async getData(url,starturl) {
+    console.log(url)
+    console.log(starturl)
+    const response = await fetch(url);//new json value
+    const response2 = await fetch(starturl);//old geojson value
+    
+    var jsondata=await response.json();
+    var geojsondata=await response2.json();
+    //compare and update the geojsondata 
+    
+    for (var i=0;i<jsondata.features.length;i++){
+      var newgeoid=jsondata.features[i]['properties']['geo_id']
+      var value=jsondata.features[i]['properties']['brfss_smoker']
+      for (var j=0;j<geojsondata.features.length;j++){
+        var oldgeoid=geojsondata.features[j]['properties']['geo_id']
+        var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
+        if (newgeoid=oldgeoid)
+         {
+            geojsondata.features[j]['properties']['brfss_smoker']=value
+            var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
+            
+          }
+      } 
+      //console.log(oldvalue,value)
+      //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
+      //console.log(newfeature)
+    }
 
-    //const json=JSON.stringify(response);
-    //return json;
-    //console.log(await response.json())}
-    var jsondata=await response.json()
-    console.log(jsondata)
-    this.styledata(jsondata)
+    //console.log(geojsondata)
+    var newstyle=this.styledata(geojsondata)
+    console.log(newstyle)
+    return this.styledata(geojsondata)
+
 
   }
     //return jsondata;}
@@ -147,6 +174,7 @@ export default class SmokerMap extends React.Component{
       url: metadata[1].geojson_url, //context.state.attribute,
       format: new GeoJSON()
     })
+
     console.log("source is:",context.state.attribute)
     
    //need to pass context.state.attribute into some function to get new json
@@ -172,13 +200,14 @@ export default class SmokerMap extends React.Component{
 
     
     
-
+  /*
     var stylefunction = function(feature){
       
         var style;
         //console.log(feature);
         
         var value=feature.get('brfss_smoker');
+        //console.log(value);
         //var geojson1={geoid:23,value:16},{geoid:50,value:25}
         //var geojson2={geoid:27,value:55},{geoid:55,value:25},{geoid:63,value:16},{geoid:23,value:25},{geoid:99,value:16},{geoid:50,value:65}
 
@@ -186,6 +215,7 @@ export default class SmokerMap extends React.Component{
         //var value = feature.get('brfss_smoker');
         
         var geoid=feature.get('geo_id');
+        console.log(geoid);
         for (var i=0; i<feature.length;i++){
           var newgeoid=feature[i].values.geo_id;
           //console.log(newgeoid);
@@ -208,7 +238,7 @@ export default class SmokerMap extends React.Component{
             if (newgeoid===geoid ){
               var value= Whitesmoker.features[i].properties.brfss_smoker;
              };
-          }*/
+          }
         //console.log(value)
         
         
@@ -238,20 +268,15 @@ export default class SmokerMap extends React.Component{
         return style;
 
     };
+    */
 
     var smokerlayer = new VectorLayer({
 
        source: smokerSource,
-       style: stylefunction
+       style: this.styledata
        //need to figure out how to update this style
 
        })
-
-       //a function to get geoid but doesnt work
-       var getgeoid = function(feature){
-        var geoid=feature.get('geo_id');
-        console.log(geoid)
-        return geoid}
 
     var olmap=new Map({
       layers: [basemap,countyOutline,smokerlayer],
@@ -260,18 +285,16 @@ export default class SmokerMap extends React.Component{
         center:fromLonLat([-94.6859,46.7296]),
         zoom: 6
       })
-
-
-
     });
 
     this.setState({
-      oldgeoid: getgeoid,
+      
       olmap: olmap,
       countyOutlineSource:countyOutlineSource,
       countyOutline: countyOutline,
       smokerlayer: smokerlayer,
       smokerSource:smokerSource
+      //stylefunction:this.styledata
       
   })
 
@@ -284,18 +307,16 @@ export default class SmokerMap extends React.Component{
 componentDidUpdate(){
   const context=this.context;
   console.log("update:",context.state.attribute)
+  var geojsondata=metadata[1].geojson_url; 
   console.log(this.state.smokerSource)
   
-  var jsondata= this.getData(context.state.attribute);
-  console.log(jsondata);
+  var jsondata= this.getData(context.state.attribute,geojsondata);
+  //console.log(jsondata);
   //this.styledata(jsondata);
 
   
-  /*
-  this.setState({
-     smokerlayer : new VectorLayer({  
-      style: this.styledata})
-    })*/
+  
+  
   
   //this.stylefunction(jsondata);
     //const printAddress = async () => {
