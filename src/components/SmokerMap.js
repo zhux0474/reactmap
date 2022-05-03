@@ -39,7 +39,8 @@ export default class SmokerMap extends React.Component{
       stylefunction: null,
       countyOutlineSource: null,
       countyOutline: false,
-      countyReady: false
+      countyReady: false,
+      smokerData: null
       
   };
    // console.log(this.props);
@@ -48,11 +49,13 @@ export default class SmokerMap extends React.Component{
   //global function（styledata） to style map 
   // will be called in componentDidMount and componentDidUpdate
   //static geojsondata =metadata[1].geojson_url; 
-  styledata(feature){
+  styledata(geoFeature){
 
-    var thestyle;
-    //console.log(feature)
-    var value=feature.get('brfss_smoker');
+    var newStyle;
+    console.log(geoFeature)
+    // Fixed this error
+    //var value=geoFeature.get('brfss_smoker');
+    var value=geoFeature['values_']['brfss_smoker'];
     //var testvalue = 6
     //console.log(value)
     //this.oldgeoid=feature.get('geo_id');
@@ -68,7 +71,7 @@ export default class SmokerMap extends React.Component{
 
     for (let i =0;i<metadata[1]['break'].length;i++){
       if(value>metadata[1]['break'][i]){
-      thestyle= new Style({
+      newStyle = new Style({
         fill: new Fill({
           color: metadata[1]['color'][i]
         }),
@@ -79,43 +82,49 @@ export default class SmokerMap extends React.Component{
       })
     };
   }
-    //console.log(thestyle)
-    return thestyle;
+    //console.log(newStyle)
+    //this iterates through every feature and assigns a style
+    //this.setState({ mapStyle: newStyle });
+    return newStyle;
 
   }
   //a global function(getData) to get json data from url when called from componentDidUpdate 
   async getData(url,starturl) {
-    console.log(url)
-    console.log(starturl)
-    const response = await fetch(url);//new json value
-    const response2 = await fetch(starturl);//old geojson value
-    
-    var jsondata=await response.json();
-    var geojsondata=await response2.json();
-    //compare and update the geojsondata 
-    
-    for (var i=0;i<jsondata.features.length;i++){
-      var newgeoid=jsondata.features[i]['properties']['geo_id']
-      var value=jsondata.features[i]['properties']['brfss_smoker']
-      for (var j=0;j<geojsondata.features.length;j++){
-        var oldgeoid=geojsondata.features[j]['properties']['geo_id']
-        var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
-        if (newgeoid=oldgeoid)
-         {
-            geojsondata.features[j]['properties']['brfss_smoker']=value
-            var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
-            
-          }
-      } 
-      //console.log(oldvalue,value)
-      //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
-      //console.log(newfeature)
+    if ( url != starturl){
+      console.log(starturl)
+      const response = await fetch(url);//new json value
+      const response2 = await fetch(starturl);//old geojson value
+      
+      var jsondata=await response.json();
+      var geojsondata=await response2.json();
+      //compare and update the geojsondata 
+      
+      for (var i=0;i<jsondata.features.length;i++){
+        var newgeoid=jsondata.features[i]['properties']['geo_id']
+        var value=jsondata.features[i]['properties']['brfss_smoker']
+        for (var j=0;j<geojsondata.features.length;j++){
+          var oldgeoid=geojsondata.features[j]['properties']['geo_id']
+          var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
+          if (newgeoid=oldgeoid)
+           {
+              geojsondata.features[j]['properties']['brfss_smoker']=value
+              var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
+              
+            }
+        } 
+        //console.log(oldvalue,value)
+        //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
+        //console.log(newfeature)
+      }
+  
+      //console.log(geojsondata)
+      // var newChoropleth=this.styledata(geojsondata);
+      // console.log(newChoropleth);
+      
+
+      return geojsondata //this.styledata(geojsondata)
     }
 
-    //console.log(geojsondata)
-    var newstyle=this.styledata(geojsondata)
-    console.log(newstyle)
-    return this.styledata(geojsondata)
 
 
   }
@@ -293,8 +302,8 @@ export default class SmokerMap extends React.Component{
       countyOutlineSource:countyOutlineSource,
       countyOutline: countyOutline,
       smokerlayer: smokerlayer,
-      smokerSource:smokerSource
-      //stylefunction:this.styledata
+      smokerSource:smokerSource,
+      smokerStyle:this.styledata
       
   })
 
@@ -304,15 +313,50 @@ export default class SmokerMap extends React.Component{
 }
 
 
-componentDidUpdate(){
+async componentDidUpdate(prevProps,prevState){
   const context=this.context;
   console.log("update:",context.state.attribute)
   var geojsondata=metadata[1].geojson_url; 
-  console.log(this.state.smokerSource)
+  // console.dir(prevState.smokerSource);
+  // console.dir(this.state.smokerSource);
+
   
-  var jsondata= this.getData(context.state.attribute,geojsondata);
+  if ( prevState.smokerSource != null){
+    console.log("Component is updating");
+    console.log(this.state.smokerSource['url_']);
+    if(context.state.attribute != geojsondata){
+      //This didn't work the urls are always the same.
+      //this.state.smokerSource['url_'] != prevState.smokerSource['url_']
+      try{
+        console.log("getting data")
+        const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
+        console.log(updatedGeoJSON)
+        //const updatedJSON = await updatedGeoJSON.json();
+        //this.setState({smokerData: updatedGeoJSON});
+        var newMapStyle;
+        for (let i =0;i< updatedGeoJSON.length;i++){
+          newMapStyle = this.styledata(updatedGeoJSON)
+          this.setState({smokerStyle: newMapStyle});
+        }
+        
+        //console.log(newMapStyle)
+        
+      } catch (error){
+        console.log(error);
+      }
+        
+
+    };
+      
+    //  console.log(updatedJSON)     
+    
+  };
+  console.log("Done")
+
+  
   //console.log(jsondata);
   //this.styledata(jsondata);
+  
 
   
   
