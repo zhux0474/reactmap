@@ -52,7 +52,7 @@ export default class SmokerMap extends React.Component{
   styledata(geoFeature){
 
     var newStyle;
-    console.log(geoFeature)
+    // console.log(geoFeature)
     // Fixed this error
     //var value=geoFeature.get('brfss_smoker');
     var value=geoFeature['values_']['brfss_smoker'];
@@ -100,15 +100,19 @@ export default class SmokerMap extends React.Component{
       //compare and update the geojsondata 
       
       for (var i=0;i<jsondata.features.length;i++){
+        //New json value
         var newgeoid=jsondata.features[i]['properties']['geo_id']
-        var value=jsondata.features[i]['properties']['brfss_smoker']
+        var newvalue=jsondata.features[i]['properties']['brfss_smoker']
+
         for (var j=0;j<geojsondata.features.length;j++){
+          //Old json
           var oldgeoid=geojsondata.features[j]['properties']['geo_id']
           var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
-          if (newgeoid=oldgeoid)
+          if (newgeoid===oldgeoid)
            {
-              geojsondata.features[j]['properties']['brfss_smoker']=value
-              var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
+             console.log(oldgeoid,newvalue, oldvalue)
+             geojsondata.features[j]['properties']['brfss_smoker']=newvalue
+              //var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
               
             }
         } 
@@ -116,8 +120,9 @@ export default class SmokerMap extends React.Component{
         //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
         //console.log(newfeature)
       }
-  
-      //console.log(geojsondata)
+      
+      console.log("Is this data altered before it leaves the function")
+      console.log(geojsondata)
       // var newChoropleth=this.styledata(geojsondata);
       // console.log(newChoropleth);
       
@@ -330,13 +335,15 @@ async componentDidUpdate(prevProps,prevState){
       try{
         console.log("getting data")
         const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
-        console.log(updatedGeoJSON)
+        console.log("Log Updated Data");
+        console.log(updatedGeoJSON);
         //const updatedJSON = await updatedGeoJSON.json();
         //this.setState({smokerData: updatedGeoJSON});
         var newMapStyle;
-        for (let i =0;i< updatedGeoJSON.length;i++){
+        for (let i =0;i< updatedGeoJSON.features.length;i++){
           newMapStyle = this.styledata(updatedGeoJSON)
-          this.setState({smokerStyle: newMapStyle});
+          //this.setState({smokerStyle: newMapStyle});
+          this.state.smokerlayer.setStyle(newMapStyle)
         }
         
         //console.log(newMapStyle)
