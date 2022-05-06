@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { fromLonLat, get } from "ol/proj";
 //import "./SmokerMap.css";
 import Map from "ol/Map";
@@ -6,169 +6,382 @@ import Map from "ol/Map";
 import View from "ol/View";
 //import { Point, Style, Circle, Fill, Feature } from "ol";
 import TileLayer from "ol/layer/Tile";
-import TileWMS from 'ol/source/TileWMS';
+//import TileWMS from 'ol/source/TileWMS';
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from 'ol/format/GeoJSON';
 import OSM from "ol/source/OSM";
 import {Fill, Stroke, Style} from 'ol/style';
-//import cityboundary from "./Minneapolis_Police_Precincts.geojson";
+import {metadata} from './metadata.js';
+import countyData from './countyline.geojson';
+import Dropdown from './dropdown.js';
+import Whitesmoker from '../data/whitesmoker.json';
+import {Context} from "./context";
+import { useContext } from "react";
+//import {ccontext} from "./context";
 
 
 export default class SmokerMap extends React.Component{
+
+  static contextType = Context;
+  
+  context=this.context;
+  //var oldgeoid={};
+  
+  
+  
   constructor(props){
     super(props);
-    console.log(this.props);
-    this.mapRef=React.createRef();
+    this.state = {
+      
+      smokerSource : null,
+      smokerlayer: false,
+      stylefunction: null,
+      countyOutlineSource: null,
+      countyOutline: false,
+      countyReady: false
+      
+  };
+   // console.log(this.props);
   }
-  componentDidMount(){
+  
+  //global function（styledata） to style map 
+  // will be called in componentDidMount and componentDidUpdate
+  //static geojsondata =metadata[1].geojson_url; 
+  styledata(feature){
 
-    var basemap =new TileLayer({
-      source: new OSM()
-    })
+    var thestyle;
+    //console.log(feature)
+    var value=feature.get('brfss_smoker');
+    //var testvalue = 6
+    //console.log(value)
+    //this.oldgeoid=feature.get('geo_id');
+    //console.log(this.oldgeoid)
+    //console.log(feature.get('geo_id'))
+    //for (var i=0; i<feature.length;i++){
+      //var newgeoid=feature[i].values.geo_id;
+      //console.log(newgeoid);
+      //if (newgeoid===this.oldgeoid ){
+        //var value= feature[i].values.brfss_smoker;
+       //};
+    //}
 
-    var vectorstyle = new Style({
-      fill: new Fill({
-        color: '#eeeeee'
-      }),
-      stroke: new Stroke({
-        color:'black',
-        width:1
-      })
-    })
-
-    var totalsmoker = new VectorSource({
-      url:"https://smartcommunityhealth.ahc.umn.edu/lung_cancer/wms?service=WMS&version=1.1.0&request=GetMap&layers=lung_cancer%3Atotal_smokers_v2&bbox=-97.239209%2C43.499383499%2C-89.4917389999999%2C49.3843580000001&width=768&height=583&srs=EPSG%3A4326&format=geojson",
-      format: new GeoJSON()
-    })
-
-    var vectorlayer = new VectorLayer({
-       //source : new VectorSource({
-        //url: "https://smartcommunityhealth.ahc.umn.edu/lung_cancer/wms?service=WMS&version=1.1.0&request=GetMap&layers=lung_cancer%3Atotal_smokers_v2&bbox=-97.239209%2C43.499383499%2C-89.4917389999999%2C49.3843580000001&width=768&height=583&srs=EPSG%3A4326&format=geojson",
-        //format: new GeoJSON(),
-        source: totalsmoker,
-        style: vectorstyle
-        
-        /*function (feature){
-          const color=feature.get('COLORS')|| '#eeeeee';
-          this.style.getFill().setColor(color);
-          return this.style;
-            */
+    for (let i =0;i<metadata[1]['break'].length;i++){
+      if(value>metadata[1]['break'][i]){
+      thestyle= new Style({
+        fill: new Fill({
+          color: metadata[1]['color'][i]
+        }),
+        stroke: new Stroke({
+          color:'black',
+          width:0.3
         })
-    
-      var stylefunction = function(feature){
-      var style;
-      var value=feature.get('brffs_smokers');
-      var color= value <100 ? '#ffffff': value <200 ? '#ff3f3f' : '#3f0000';
-      this.style.getFill().setColor(color);
+      })
+    };
+  }
+    //console.log(thestyle)
+    return thestyle;
 
-      /*
-      if(feature.get('brffs_smokers')>'100'){
-        style= new Style({
-          fill: new Fill({
-            color: '#B4DFB4'
+  }
+  //a global function(getData) to get json data from url when called from componentDidUpdate 
+  async getData(url,starturl) {
+    console.log(url)
+    console.log(starturl)
+    const response = await fetch(url);//new json value
+    const response2 = await fetch(starturl);//old geojson value
+    
+    var jsondata=await response.json();
+    var geojsondata=await response2.json();
+    //compare and update the geojsondata 
+    
+    for (var i=0;i<jsondata.features.length;i++){
+      var newgeoid=jsondata.features[i]['properties']['geo_id']
+      var value=jsondata.features[i]['properties']['brfss_smoker']
+      for (var j=0;j<geojsondata.features.length;j++){
+        var oldgeoid=geojsondata.features[j]['properties']['geo_id']
+        var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
+        if (newgeoid=oldgeoid)
+         {
+            geojsondata.features[j]['properties']['brfss_smoker']=value
+            var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
+            
+          }
+      } 
+      //console.log(oldvalue,value)
+      //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
+      //console.log(newfeature)
+    }
+
+    //console.log(geojsondata)
+    var newstyle=this.styledata(geojsondata)
+    console.log(newstyle)
+    return this.styledata(geojsondata)
+
+
+  }
+    //return jsondata;}
+/*
+    for (var i=0;i<jsondata.features.length;i++){
+      var newgeoid=jsondata.features[i]['properties']['geo_id']
+      var value=jsondata.features[i]['properties']['brfss_smoker']
+      //if (newgeoid=oldgeoid)
+    }
+    console.log(jsondata.features[0]['properties']['geo_id'])
+
+    //return await response.json();
+  };*/
+  /*
+  stylefunction(feature){
+    var style;
+    //console.log(feature.features)
+    var geoid=feature.get('geo_id');
+    //var geoid=feature.features
+    for (var i=0; i<feature.length;i++){
+    var newgeoid=feature[i].values.geo_id;
+        //console.log(newgeoid);
+    if (newgeoid===geoid ){
+      var value= feature[i].values.brfss_smoker;
+         };
+      }
+    for (let i =0;i<metadata[1]['break'].length;i++){
+      if(value>metadata[1]['break'][i]){
+      style= new Style({
+      fill: new Fill({
+      color: metadata[1]['color'][i]
           }),
           stroke: new Stroke({
             color:'black',
-            width:1
+            width:0.3
           })
         })
-      }
-      else 
-        style= new Style({
-         fill: new Fill({
-            color: '#B4DFB4'
-          }),
-         stroke: new Stroke({
-           color:'yellow',
-            width:1
-         })
-      })
-      */
+      };
+    }
+
       return style;
 
-    };
+  };*/
 
+  
+  componentDidMount(){
     
+    const context=this.context;
+    console.log(context);
+    // get the current value in UsersContext through the hook
+    var basemap =new TileLayer({
+      source: new OSM()
+    })
+    var smokerSource = new VectorSource({
+      url: metadata[1].geojson_url, //context.state.attribute,
+      format: new GeoJSON()
+    })
 
-    var lungdata = new TileLayer({
-      source : new TileWMS ({
-        url:'https://smartcommunityhealth.ahc.umn.edu/lung_cancer/wms',
-        serverType:'geoserver',
-        params: {'LAYERS': 'lung_cancer:total_smokers_v2', 'TILED': true},
-        
-        transition: 0
+    console.log("source is:",context.state.attribute)
+    
+   //need to pass context.state.attribute into some function to get new json
+   //store json as a variable 
 
-      }),
-      style: vectorstyle
-
-
-
+    var countyOutlineSource = new VectorSource({
+      url: countyData,
+      format: new GeoJSON()
 
     })
+    var countyBorder = new Style({
+      stroke: new Stroke({
+          color: 'black',
+          width: 1
+      })
+  });
+    var countyOutline = new VectorLayer({
+      opacity: 1,
+      //visible: this.props.viewed === 'County',
+      source: countyOutlineSource,
+      style: countyBorder
+    });
+
     
-    this.map=new Map({
-      layers: [basemap,vectorlayer],
+    
+  /*
+    var stylefunction = function(feature){
+      
+        var style;
+        //console.log(feature);
+        
+        var value=feature.get('brfss_smoker');
+        //console.log(value);
+        //var geojson1={geoid:23,value:16},{geoid:50,value:25}
+        //var geojson2={geoid:27,value:55},{geoid:55,value:25},{geoid:63,value:16},{geoid:23,value:25},{geoid:99,value:16},{geoid:50,value:65}
+
+        //var county=feature.get('county');
+        //var value = feature.get('brfss_smoker');
+        
+        var geoid=feature.get('geo_id');
+        console.log(geoid);
+        for (var i=0; i<feature.length;i++){
+          var newgeoid=feature[i].values.geo_id;
+          //console.log(newgeoid);
+          if (newgeoid===geoid ){
+            var value= feature[i].values.brfss_smoker;
+           };
+        }
+       //console.log("geoid",geoid);
+        //console.log(value);
+        //console.log(Object.keys(geoid));
+       // const newgeoid = Whitesmoker.map((id)=> {
+         // var white=Whitesmoker.get('geo_id');
+          //console.log(white);
+          /*
+          for sample
+          var geoid=feature.get('geo_id');
+        for (var i=0; i<Whitesmoker.features.length;i++){
+            var newgeoid=Whitesmoker.features[i].properties.geo_id;
+            //console.log(newgeoid);
+            if (newgeoid===geoid ){
+              var value= Whitesmoker.features[i].properties.brfss_smoker;
+             };
+          }
+        //console.log(value)
+        
+        
+        //var jsondata= getData();
+        //console.log(jsondata);
+        
+        //compare geoid with the next json
+        // mapping function or a for loop to find the matching value
+        // return value from geojson2 and assign to var value 
+        
+        // assign color to each break from metadata.js
+        //console.log(county,value)
+        for (let i =0;i<metadata[1]['break'].length;i++){
+          if(value>metadata[1]['break'][i]){
+          style= new Style({
+            fill: new Fill({
+              color: metadata[1]['color'][i]
+            }),
+            stroke: new Stroke({
+              color:'black',
+              width:0.3
+            })
+          })
+        };
+      }
+
+        return style;
+
+    };
+    */
+
+    var smokerlayer = new VectorLayer({
+
+       source: smokerSource,
+       style: this.styledata
+       //need to figure out how to update this style
+
+       })
+
+    var olmap=new Map({
+      layers: [basemap,countyOutline,smokerlayer],
       target: "mapContainer",
       view :new View({
         center:fromLonLat([-94.6859,46.7296]),
         zoom: 6
       })
-
     });
-   
-  }
+
+    this.setState({
+      
+      olmap: olmap,
+      countyOutlineSource:countyOutlineSource,
+      countyOutline: countyOutline,
+      smokerlayer: smokerlayer,
+      smokerSource:smokerSource
+      //stylefunction:this.styledata
+      
+  })
+
+  
+  
+
+}
+
+
+componentDidUpdate(){
+  const context=this.context;
+  console.log("update:",context.state.attribute)
+  var geojsondata=metadata[1].geojson_url; 
+  console.log(this.state.smokerSource)
+  
+  var jsondata= this.getData(context.state.attribute,geojsondata);
+  //console.log(jsondata);
+  //this.styledata(jsondata);
+
+  
+  
+  
+  
+  //this.stylefunction(jsondata);
+    //const printAddress = async () => {
+      //const a = jsondata;
+      //const jsonn=JSON.stringify(a)
+      //console.log(a);
+    //};
+    //printAddress();
+}
+/*
+  componentDidUpdate(prevProps,prevState){
+    //console.log(this.props)
+    if (prevProps.api != this.props.api){
+      
+      //console.log(prevState.smokerSource)
+      const context=this.context;
+      console.log("update:",context)
+      const getjson=()=>{
+        fetch(context.state.attribute)
+        .then(function(response){
+          //console.log(response)
+          return response.json();
+        })
+        .then(function(myJson){
+          //console.log(myJson);
+  
+        });
+  
+  
+      }
+    
+    }
+    
+      
+      
+  }*/
+    
+  
+  
+
+  
+
+  
   render() {
-    console.log("-> render App");
+    //console.log("-> render App");
+    //console.log("before return",this.state)
     return (
-      <div
-        id="mapContainer"
-        ref={this.mapRef}
-        style={{ width: "100%", height: "500px" }}
-      >
-       
-      </div>
+      console.log("after return",this.state),
+      //{context},
+      <Context.Consumer>
+
+        {(context)=>(
+
+          <p>{context.state.attribute}</p>
+        )}
+      
+      </Context.Consumer>,
+      
+      <div id="mapContainer" style={{ width: "100%",height: "500px"}}></div>
+      //console.log(this.state)
+      
+
     );
+    
   }
 
 
 }
-/*
-const SmokerMap = ({ counties}) =>{
-    /*
-    const mapStyle={
-        fillColor: "white",
-        weight: 1,
-        color: "black",
-        fillOpacity: 1,
-    };
-    const onEachCountry = (country, layer) => {
-        layer.options.fillColor = country.properties.color;
-        const name = country.properties.ADMIN;
-        const confirmedText = country.properties.confirmedText;
-        layer.bindPopup(`${name} ${confirmedText}`);
-      };*/
-
-      /*return (
-        <Map style={{ height: "90vh" }} zoom={2} center={[-94.6859,46.7296]}>
-          <GeoJSON
-            style={mapStyle}
-            data={countries}
-            onEachFeature={onEachCountry}
-          />
-        </Map>
-      );
-      return (
-        <div className="map_div">
-        <Map className="smoker_map" view={{center:fromLonLat([-94.6859,46.7296]),zoom:6}}>
-          <Layers>
-            <layer.Tile></layer.Tile>
-            </Layers>
-    
-        </Map>
-        
-        </div>
-      );
-};
-export default SmokerMap;
-*/

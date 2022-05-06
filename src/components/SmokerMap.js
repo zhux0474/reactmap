@@ -39,7 +39,10 @@ export default class SmokerMap extends React.Component{
       stylefunction: null,
       countyOutlineSource: null,
       countyOutline: false,
-      countyReady: false
+      countyReady: false,
+      smokerData: null,
+      ohstyle:null
+      
       
   };
    // console.log(this.props);
@@ -48,27 +51,18 @@ export default class SmokerMap extends React.Component{
   //global function（styledata） to style map 
   // will be called in componentDidMount and componentDidUpdate
   //static geojsondata =metadata[1].geojson_url; 
-  styledata(feature){
+  styledata(geoFeature){
 
-    var thestyle;
-    //console.log(feature)
-    var value=feature.get('brfss_smoker');
-    //var testvalue = 6
-    //console.log(value)
-    //this.oldgeoid=feature.get('geo_id');
-    //console.log(this.oldgeoid)
-    //console.log(feature.get('geo_id'))
-    //for (var i=0; i<feature.length;i++){
-      //var newgeoid=feature[i].values.geo_id;
-      //console.log(newgeoid);
-      //if (newgeoid===this.oldgeoid ){
-        //var value= feature[i].values.brfss_smoker;
-       //};
-    //}
+    var newStyle;
+    //console.log(geoFeature['values_'])
+    //var value=geoFeature['brfss_smoker'];
+    //updatedGeoJSON.features[i]['properties']['brfss_smoker']
+    
+    var value=geoFeature['values_']['brfss_smoker'];
 
     for (let i =0;i<metadata[1]['break'].length;i++){
       if(value>metadata[1]['break'][i]){
-      thestyle= new Style({
+      newStyle= new Style({
         fill: new Fill({
           color: metadata[1]['color'][i]
         }),
@@ -79,19 +73,23 @@ export default class SmokerMap extends React.Component{
       })
     };
   }
-    //console.log(thestyle)
-    return thestyle;
+    //console.log(newStyle)
+    return newStyle;
 
   }
   //a global function(getData) to get json data from url when called from componentDidUpdate 
   async getData(url,starturl) {
     console.log(url)
     console.log(starturl)
+    if (url != starturl){
+
+      //console.log(starturl)
     const response = await fetch(url);//new json value
     const response2 = await fetch(starturl);//old geojson value
     
     var jsondata=await response.json();
     var geojsondata=await response2.json();
+    console.log(jsondata)
     //compare and update the geojsondata 
     
     for (var i=0;i<jsondata.features.length;i++){
@@ -101,23 +99,28 @@ export default class SmokerMap extends React.Component{
         var oldgeoid=geojsondata.features[j]['properties']['geo_id']
         var oldvalue=geojsondata.features[j]['properties']['brfss_smoker']
         if (newgeoid=oldgeoid)
-         {
-            geojsondata.features[j]['properties']['brfss_smoker']=value
+         {  
+           
+            geojsondata.features[j]['properties']['brfss_smoker']=jsondata.features[i]['properties']['brfss_smoker']
             var newfeature=geojsondata.features[j]['properties']['brfss_smoker']
-            
+            //so weird , i console log here, values are different but the page will be broke 
           }
+          //console.log(geojsondata.features)
       } 
       //console.log(oldvalue,value)
-      //console.log(geojsondata.features[i]['properties']['brfss_smoker'])
-      //console.log(newfeature)
+      
+      //console.log(geojsondata.features)// values are the same??!!
     }
 
-    //console.log(geojsondata)
-    var newstyle=this.styledata(geojsondata)
-    console.log(newstyle)
-    return this.styledata(geojsondata)
+    console.log(geojsondata.features)
+    //but here, values are the same??!!
+    
+    console.log(geojsondata)
+   
+    return geojsondata
 
-
+    }
+    
   }
     //return jsondata;}
 /*
@@ -213,7 +216,7 @@ export default class SmokerMap extends React.Component{
 
         //var county=feature.get('county');
         //var value = feature.get('brfss_smoker');
-        
+        /*
         var geoid=feature.get('geo_id');
         console.log(geoid);
         for (var i=0; i<feature.length;i++){
@@ -222,7 +225,7 @@ export default class SmokerMap extends React.Component{
           if (newgeoid===geoid ){
             var value= feature[i].values.brfss_smoker;
            };
-        }
+        }*/
        //console.log("geoid",geoid);
         //console.log(value);
         //console.log(Object.keys(geoid));
@@ -230,6 +233,7 @@ export default class SmokerMap extends React.Component{
          // var white=Whitesmoker.get('geo_id');
           //console.log(white);
           /*
+
           for sample
           var geoid=feature.get('geo_id');
         for (var i=0; i<Whitesmoker.features.length;i++){
@@ -238,7 +242,8 @@ export default class SmokerMap extends React.Component{
             if (newgeoid===geoid ){
               var value= Whitesmoker.features[i].properties.brfss_smoker;
              };
-          }
+          }*/
+          /*
         //console.log(value)
         
         
@@ -269,14 +274,20 @@ export default class SmokerMap extends React.Component{
 
     };
     */
-
+    var mystyle;
+    mystyle=this.styledata;
+    console.log(mystyle)
     var smokerlayer = new VectorLayer({
 
-       source: smokerSource,
-       style: this.styledata
-       //need to figure out how to update this style
-
-       })
+      source: smokerSource,
+      style: mystyle
+      //mystyle
+      //this.styledata
+      //stylefunction
+      //need to figure out how to update this style
+  
+      })
+    
 
     var olmap=new Map({
       layers: [basemap,countyOutline,smokerlayer],
@@ -293,10 +304,12 @@ export default class SmokerMap extends React.Component{
       countyOutlineSource:countyOutlineSource,
       countyOutline: countyOutline,
       smokerlayer: smokerlayer,
-      smokerSource:smokerSource
-      //stylefunction:this.styledata
+      smokerSource:smokerSource,
+      //stylefunction:this.styledata,
+      //ohstyle:this.styledata
       
   })
+  
 
   
   
@@ -304,58 +317,69 @@ export default class SmokerMap extends React.Component{
 }
 
 
-componentDidUpdate(){
+async componentDidUpdate(prevProps,prevState){
   const context=this.context;
   console.log("update:",context.state.attribute)
   var geojsondata=metadata[1].geojson_url; 
-  console.log(this.state.smokerSource)
-  
-  var jsondata= this.getData(context.state.attribute,geojsondata);
-  //console.log(jsondata);
-  //this.styledata(jsondata);
+  // console.dir(prevState.smokerSource);
+  // console.dir(this.state.smokerSource);
 
   
-  
-  
-  
-  //this.stylefunction(jsondata);
-    //const printAddress = async () => {
-      //const a = jsondata;
-      //const jsonn=JSON.stringify(a)
-      //console.log(a);
-    //};
-    //printAddress();
-}
-/*
-  componentDidUpdate(prevProps,prevState){
-    //console.log(this.props)
-    if (prevProps.api != this.props.api){
-      
-      //console.log(prevState.smokerSource)
-      const context=this.context;
-      console.log("update:",context)
-      const getjson=()=>{
-        fetch(context.state.attribute)
-        .then(function(response){
-          //console.log(response)
-          return response.json();
-        })
-        .then(function(myJson){
-          //console.log(myJson);
-  
-        });
-  
-  
+  if ( prevState.smokerSource != null){
+    console.log("Component is updating");
+    console.log(this.state.smokerSource['url_']);
+    if(context.state.attribute != geojsondata){
+      //This didn't work the urls are always the same.
+      //this.state.smokerSource['url_'] != prevState.smokerSource['url_']
+      try{
+        console.log("getting data")
+        const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
+        console.log(updatedGeoJSON.features)
+        //console.log(updatedGeoJSON.features[0]['properties']['brfss_smoker'])
+        //const updatedJSON = await updatedGeoJSON.json();
+        //this.setState({smokerData: updatedGeoJSON});
+        var newMapStyle;
+        //newMapStyle = this.styledata(updatedGeoJSON)
+        
+        //this.smokerlayer.redraw()
+        //newMapStyle = this.styledata(updatedGeoJSON)
+        //this.setState({ohstyle: newMapStyle})
+        console.log(updatedGeoJSON.features.length)
+        for (let i =0;i< updatedGeoJSON.features.length;i++){
+          var value=updatedGeoJSON.features[30]['properties']['brfss_smoker']
+          //console.log(updatedGeoJSON.features[30])
+          for (let j =0;j<metadata[1]['break'].length;j++){
+            if(value>metadata[1]['break'][j]){
+            newMapStyle= new Style({
+            fill: new Fill({
+              color: metadata[1]['color'][j]
+            }),
+            stroke: new Stroke({
+              color:'black',
+              width:0.2
+               })
+             })
+            };
+          }
+
+          this.state.smokerlayer.setStyle(newMapStyle)
+        }
+          
+          
+           //console.log(newMapStyle)
+           //this.state.smokerlayer.setStyle(newMapStyle)
+          
+        
+        
+        
+      } catch (error){
+        console.log(error);
       }
+        
+    }; 
     
-    }
-    
-      
-      
-  }*/
-    
-  
-  
+  };
+  console.log("Done")}
 
   
 
