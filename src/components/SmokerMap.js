@@ -30,7 +30,7 @@ export default class SmokerMap extends React.Component{
       
       smokerSource : null,
       smokerlayer: false,
-      stylefunction: null,
+      //stylefunction: null,
       countyOutlineSource: null,
       countyOutline: false,
       countyReady: false,
@@ -51,8 +51,8 @@ export default class SmokerMap extends React.Component{
     //console.log(geoFeature)
     //var value=geoFeature['brfss_smoker'];
     //updatedGeoJSON.features[i]['properties']['brfss_smoker']
-    //var value=geoFeature['properties']['brfss_smoker']
-    var value=geoFeature['values_']['brfss_smoker'];
+    var value=geoFeature['properties']['brfss_smoker']
+    //var value=geoFeature['values_']['brfss_smoker'];
 
     for (let i =0;i<metadata[1]['break'].length;i++){
       if(value>metadata[1]['break'][i]){
@@ -88,13 +88,13 @@ export default class SmokerMap extends React.Component{
     
     var jsondata=await response.json();
     var geojsondata=await response2.json();
-    console.log(jsondata)
+    //console.log(jsondata)
     //compare and update the geojsondata 
     
     for (var i=0;i<geojsondata.features.length;i++){
       //New json value
       var newgeoid=jsondata.features[i]['properties']['geo_id']
-      var value=jsondata.features[i]['properties']['brfss_smoker']
+      var newvalue=jsondata.features[i]['properties']['brfss_smoker']
       for (var j=0;j<geojsondata.features.length;j++){
         //Old json
       var oldgeoid=geojsondata.features[j]['properties']['geo_id']
@@ -163,58 +163,12 @@ export default class SmokerMap extends React.Component{
 
     
     
-  
+  //style function to style the map (total smoker)
     var mystyle = function(feature){
-      
         var style;
         //console.log(feature);
         var value=feature.get('brfss_smoker');
-        //console.log(value);
-        //var geojson1={geoid:23,value:16},{geoid:50,value:25}
-        //var geojson2={geoid:27,value:55},{geoid:55,value:25},{geoid:63,value:16},{geoid:23,value:25},{geoid:99,value:16},{geoid:50,value:65}
 
-        //var county=feature.get('county');
-        //var value = feature.get('brfss_smoker');
-        /*
-        var geoid=feature.get('geo_id');
-        console.log(geoid);
-        for (var i=0; i<feature.length;i++){
-          var newgeoid=feature[i].values.geo_id;
-          //console.log(newgeoid);
-          if (newgeoid===geoid ){
-            var value= feature[i].values.brfss_smoker;
-           };
-        }*/
-       //console.log("geoid",geoid);
-        //console.log(value);
-        //console.log(Object.keys(geoid));
-       // const newgeoid = Whitesmoker.map((id)=> {
-         // var white=Whitesmoker.get('geo_id');
-          //console.log(white);
-          /*
-
-          for sample
-          var geoid=feature.get('geo_id');
-        for (var i=0; i<Whitesmoker.features.length;i++){
-            var newgeoid=Whitesmoker.features[i].properties.geo_id;
-            //console.log(newgeoid);
-            if (newgeoid===geoid ){
-              var value= Whitesmoker.features[i].properties.brfss_smoker;
-             };
-          }*/
-          
-        //console.log(value)
-        
-        
-        //var jsondata= getData();
-        //console.log(jsondata);
-        
-        //compare geoid with the next json
-        // mapping function or a for loop to find the matching value
-        // return value from geojson2 and assign to var value 
-        
-        // assign color to each break from metadata.js
-        //console.log(county,value)
         for (let i =0;i<metadata[1]['break'].length;i++){
           if(value>metadata[1]['break'][i]){
           style= new Style({
@@ -228,7 +182,6 @@ export default class SmokerMap extends React.Component{
           })
         };
       }
-
         return style;
 
     };
@@ -241,8 +194,7 @@ export default class SmokerMap extends React.Component{
     var smokerlayer = new VectorLayer({
 
       source: smokerSource,
-      style: mystyle//(feature)     
-      
+      style: mystyle
       })
     
 
@@ -277,8 +229,6 @@ export default class SmokerMap extends React.Component{
 
 
 async componentDidUpdate(prevProps,prevState){
-  //console.log(this.prevProps)
-  //console.log(this.state.smokerlayer)
   const context=this.context;
   console.log("update:",context.state.attribute)
   var geojsondata=metadata[1].geojson_url; 
@@ -286,7 +236,7 @@ async componentDidUpdate(prevProps,prevState){
   // console.dir(this.state.smokerSource);
 
   
-  if ( this.state.smokerSource != null){
+  if ( prevState.smokerSource != null){
     console.log("Component is updating");
     console.log(this.state.smokerSource['url_']);
     if(context.state.attribute !== geojsondata){
@@ -296,6 +246,8 @@ async componentDidUpdate(prevProps,prevState){
         console.log("getting data")
         const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
         console.log(updatedGeoJSON.features)
+        console.log("Log Updated Data");
+        console.log(updatedGeoJSON);
         //console.log(updatedGeoJSON.features[0]['properties']['brfss_smoker'])
         //const updatedJSON = await updatedGeoJSON.json();
         //this.setState({smokerData: updatedGeoJSON});
@@ -324,8 +276,12 @@ async componentDidUpdate(prevProps,prevState){
         //var morestyle=function(feature){
 
           for (let i =0;i< updatedGeoJSON.features.length;i++){
-            var value=updatedGeoJSON.features[i]['properties']['brfss_smoker']
-            //console.log(updatedGeoJSON.features[30])
+            //var value=updatedGeoJSON.features[i]['properties']['brfss_smoker']
+            newMapStyle = this.styledata(updatedGeoJSON.features[i])
+            
+            
+            
+            /*comment out the for loop
             for (let j =0;j<metadata[1]['break'].length;j++){
               if(value>metadata[1]['break'][j]){
                 newMapStyle= new Style({
@@ -344,7 +300,7 @@ async componentDidUpdate(prevProps,prevState){
                
               };
               //..updatedGeoJSON.features.setStyle(newMapStyle)
-            }
+            }*/
            
           }
         //}
