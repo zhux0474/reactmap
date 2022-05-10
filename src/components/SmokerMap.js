@@ -49,10 +49,12 @@ export default class SmokerMap extends React.Component{
   //global function（styledata） to style map 
   // will be called in componentDidMount and componentDidUpdate
   //static geojsondata =metadata[1].geojson_url; 
+
   styledata(geoFeature){
 
-    var newStyle;
-    // console.log(geoFeature)
+    let newStyle;
+    var metaValue = 1
+    console.log(geoFeature)
     // Fixed this error
     //var value=geoFeature.get('brfss_smoker');
     var value=geoFeature['values_']['brfss_smoker'];
@@ -69,11 +71,40 @@ export default class SmokerMap extends React.Component{
        //};
     //}
 
-    for (let i =0;i<metadata[1]['break'].length;i++){
-      if(value>metadata[1]['break'][i]){
+    for (let i =0;i<metadata[metaValue]['break'].length;i++){
+      if(value>metadata[metaValue]['break'][i]){
       newStyle = new Style({
         fill: new Fill({
-          color: metadata[1]['color'][i]
+          color: metadata[metaValue]['color'][i]
+        }),
+        stroke: new Stroke({
+          color:'black',
+          width:0.3
+        })
+      })
+    };
+  }
+    //console.log(newStyle)
+    //this iterates through every feature and assigns a style
+    //this.setState({ mapStyle: newStyle });
+    return newStyle;
+
+  }
+
+
+  styledata2(geoFeature){
+
+    let newStyle;
+    // console.log(geoFeature)
+    // Fixed this error
+    //var value=geoFeature.get('brfss_smoker');
+    var value=geoFeature['properties']['brfss_smoker'];
+
+    for (let i =0;i<metadata[3]['break'].length;i++){
+      if(value>metadata[3]['break'][i]){
+      newStyle = new Style({
+        fill: new Fill({
+          color: metadata[3]['color'][i]
         }),
         stroke: new Stroke({
           color:'black',
@@ -127,10 +158,11 @@ export default class SmokerMap extends React.Component{
       // console.log(newChoropleth);
       
 
+
       return geojsondata //this.styledata(geojsondata)
     }
 
-
+    
 
   }
     //return jsondata;}
@@ -283,11 +315,13 @@ export default class SmokerMap extends React.Component{
 
     };
     */
-
+    var initialStyle = this.styledata;
+    // console.log("What does this look like")
+    console.log(this.styledata)
     var smokerlayer = new VectorLayer({
 
        source: smokerSource,
-       style: this.styledata
+       style: initialStyle
        //need to figure out how to update this style
 
        })
@@ -308,7 +342,7 @@ export default class SmokerMap extends React.Component{
       countyOutline: countyOutline,
       smokerlayer: smokerlayer,
       smokerSource:smokerSource,
-      smokerStyle:this.styledata
+      smokerStyle:initialStyle
       
   })
 
@@ -329,25 +363,77 @@ async componentDidUpdate(prevProps,prevState){
   if ( prevState.smokerSource != null){
     console.log("Component is updating");
     console.log(this.state.smokerSource['url_']);
+
+    console.dir(this.state.smokerlayer)
+
+    //this.state.smokerlayer.getData().forEachFeature
+
+    this.state.smokerlayer.getSource().forEachFeature(function(feature) {
+      // get the desired data field, then add the field, which is used for the style
+      //var fieldVal = mapping.get(feature.getProperties().geoid)
+      console.log(feature)
+      var featureValue=feature['values_']['brfss_smoker'];
+      let updatedStyle;
+
+      for (let i =0;i<metadata[3]['break'].length;i++){
+        if(featureValue>metadata[3]['break'][i]){
+          updatedStyle = new Style({
+          fill: new Fill({
+            color: metadata[3]['color'][i]
+          }),
+          stroke: new Stroke({
+            color:'black',
+            width:0.3
+            })
+          })
+        };
+      }
+
+      feature.setStyle(updatedStyle)
+
+    });
     if(context.state.attribute != geojsondata){
       //This didn't work the urls are always the same.
       //this.state.smokerSource['url_'] != prevState.smokerSource['url_']
       try{
+        var ArrayOfStyles = []
         console.log("getting data")
         const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
         console.log("Log Updated Data");
-        console.log(updatedGeoJSON);
+        //console.log(updatedGeoJSON);
         //const updatedJSON = await updatedGeoJSON.json();
         //this.setState({smokerData: updatedGeoJSON});
-        var newMapStyle;
+        let newMapStyle;
+        
         for (let i =0;i< updatedGeoJSON.features.length;i++){
-          newMapStyle = this.styledata(updatedGeoJSON)
-          //this.setState({smokerStyle: newMapStyle});
-          this.state.smokerlayer.setStyle(newMapStyle)
+          console.log("Here we are")
+          //This is a single feature
+          //console.log(updatedGeoJSON.features[i])
+          newMapStyle = this.styledata2(updatedGeoJSON.features[i])
+          
+          // console.log(newMapStyle)
+          //updatedGeoJSON.features[i].setStyle(newMapStyle)
+          //updatedGeoJSON.features[i].setStyle(ArrayOfStyles)
+          ArrayOfStyles.push(newMapStyle)
+
+          // This will style every feature the same.
+          // if (i === 0){
+          //   this.state.smokerlayer.setStyle(newMapStyle)
+          // }
+          
+          
+          
         }
+        //this.setState({smokerStyle: ArrayOfStyles});
+        console.log(this.state.smokerlayer);
+        //console.log(ArrayOfStyles)
+        //This is styling everything with the last value.
         
-        //console.log(newMapStyle)
-        
+        //this.state.smokerlayer.setStyle(this.styledata2)
+        var oldStyle = this.state.smokerlayer.getStyle()
+        console.log(oldStyle)
+        //This didn't work
+        //this.state.smokerlayer.setStyle(ArrayOfStyles)
       } catch (error){
         console.log(error);
       }

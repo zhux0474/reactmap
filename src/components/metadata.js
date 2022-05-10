@@ -15,7 +15,7 @@ export var metadata ={
     3:{attributename:"Black Smoker",
     geojson_url:"https://smartcommunityhealth.ahc.umn.edu/lung_cancer/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=lung_cancer%3Amn_smoker_ethnicity&viewparams=ethnicity:Black&propertyName=geo_id,brfss_smoker&outputFormat=application%2Fjson",
     color:['#edf8fb','#bfd3e6','#9ebcda','#8c96c6','#8856a7','#810f7c'],
-    break:[0,200,400,600,800,1000]},
+    break:[0,50,100,250,800,1000]},
 
     4:{attributename:"Asian Smoker",
     geojson_url:"https://smartcommunityhealth.ahc.umn.edu/lung_cancer/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=lung_cancer%3Amn_smoker_ethnicity&viewparams=ethnicity:Asian&propertyName=geo_id,brfss_smoker&outputFormat=application%2Fjson",
