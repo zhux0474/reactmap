@@ -54,7 +54,7 @@ export default class SmokerMap extends React.Component{
 
     let newStyle;
     var metaValue = 1
-    console.log(geoFeature)
+    // console.log(geoFeature)
     // Fixed this error
     //var value=geoFeature.get('brfss_smoker');
     var value=geoFeature['values_']['brfss_smoker'];
@@ -367,11 +367,17 @@ async componentDidUpdate(prevProps,prevState){
     console.dir(this.state.smokerlayer)
 
     //this.state.smokerlayer.getData().forEachFeature
+    try{
+      console.log("getting data")
+      const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
+    } catch (error){
+        console.log(error);
+    }
 
     this.state.smokerlayer.getSource().forEachFeature(function(feature) {
       // get the desired data field, then add the field, which is used for the style
       //var fieldVal = mapping.get(feature.getProperties().geoid)
-      console.log(feature)
+      //console.log(feature)
       var featureValue=feature['values_']['brfss_smoker'];
       let updatedStyle;
 
@@ -392,54 +398,54 @@ async componentDidUpdate(prevProps,prevState){
       feature.setStyle(updatedStyle)
 
     });
-    if(context.state.attribute != geojsondata){
-      //This didn't work the urls are always the same.
-      //this.state.smokerSource['url_'] != prevState.smokerSource['url_']
-      try{
-        var ArrayOfStyles = []
-        console.log("getting data")
-        const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
-        console.log("Log Updated Data");
-        //console.log(updatedGeoJSON);
-        //const updatedJSON = await updatedGeoJSON.json();
-        //this.setState({smokerData: updatedGeoJSON});
-        let newMapStyle;
+    // if(context.state.attribute != geojsondata){
+    //   //This didn't work the urls are always the same.
+    //   //this.state.smokerSource['url_'] != prevState.smokerSource['url_']
+    //   try{
+    //     var ArrayOfStyles = []
+    //     console.log("getting data")
+    //     const updatedGeoJSON = await this.getData(context.state.attribute,geojsondata);
+    //     console.log("Log Updated Data");
+    //     //console.log(updatedGeoJSON);
+    //     //const updatedJSON = await updatedGeoJSON.json();
+    //     //this.setState({smokerData: updatedGeoJSON});
+    //     let newMapStyle;
         
-        for (let i =0;i< updatedGeoJSON.features.length;i++){
-          console.log("Here we are")
-          //This is a single feature
-          //console.log(updatedGeoJSON.features[i])
-          newMapStyle = this.styledata2(updatedGeoJSON.features[i])
+    //     for (let i =0;i< updatedGeoJSON.features.length;i++){
+    //       console.log("Here we are")
+    //       //This is a single feature
+    //       //console.log(updatedGeoJSON.features[i])
+    //       newMapStyle = this.styledata2(updatedGeoJSON.features[i])
           
-          // console.log(newMapStyle)
-          //updatedGeoJSON.features[i].setStyle(newMapStyle)
-          //updatedGeoJSON.features[i].setStyle(ArrayOfStyles)
-          ArrayOfStyles.push(newMapStyle)
+    //       // console.log(newMapStyle)
+    //       //updatedGeoJSON.features[i].setStyle(newMapStyle)
+    //       //updatedGeoJSON.features[i].setStyle(ArrayOfStyles)
+    //       ArrayOfStyles.push(newMapStyle)
 
-          // This will style every feature the same.
-          // if (i === 0){
-          //   this.state.smokerlayer.setStyle(newMapStyle)
-          // }
+    //       // This will style every feature the same.
+    //       // if (i === 0){
+    //       //   this.state.smokerlayer.setStyle(newMapStyle)
+    //       // }
           
           
           
-        }
-        //this.setState({smokerStyle: ArrayOfStyles});
-        console.log(this.state.smokerlayer);
-        //console.log(ArrayOfStyles)
-        //This is styling everything with the last value.
+    //     }
+    //     //this.setState({smokerStyle: ArrayOfStyles});
+    //     console.log(this.state.smokerlayer);
+    //     //console.log(ArrayOfStyles)
+    //     //This is styling everything with the last value.
         
-        //this.state.smokerlayer.setStyle(this.styledata2)
-        var oldStyle = this.state.smokerlayer.getStyle()
-        console.log(oldStyle)
-        //This didn't work
-        //this.state.smokerlayer.setStyle(ArrayOfStyles)
-      } catch (error){
-        console.log(error);
-      }
+    //     //this.state.smokerlayer.setStyle(this.styledata2)
+    //     var oldStyle = this.state.smokerlayer.getStyle()
+    //     console.log(oldStyle)
+    //     //This didn't work
+    //     //this.state.smokerlayer.setStyle(ArrayOfStyles)
+    //   } catch (error){
+    //     console.log(error);
+    //   }
         
 
-    };
+    // };
       
     //  console.log(updatedJSON)     
     
