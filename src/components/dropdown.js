@@ -1,9 +1,6 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {Context} from "./context.js"
 import {metadata} from './metadata.js';
-
-
-
 
 
 
@@ -56,10 +53,16 @@ function Dropdown(){
   for (var i =1; i<=Object.keys(metadata).length;i++) {
     console.log(metadata[i]['attributename'])
     //need put this info somewhere (inside the state)
-    attributes.push( { label: metadata[i]['attributename'], value: metadata[i]['geojson_url']}); 
+    attributes.push( { label: metadata[i]['attributename'], 
+    value: metadata[i]['geojson_url'],
+    attributeid: metadata[i]['id']
+    
+  }); 
+  console.log(attributes)
+    
   }
   
-
+//<option value=" Select an attribute"> -- Select an attribute -- </option> 
 // Using state to keep track of selection
 //console.log(attributes)
 
@@ -70,9 +73,8 @@ function Dropdown(){
       <div>
       <p>Please Select an Attribute to Display</p>
       <select onChange={context.handleChange}>
-        <option value=" Select an attribute"> -- Select an attribute -- </option>
-        {attributes.map((attribute) => <option value={attribute.value}> {attribute.label}</option>)}
-        console.log(attributes)
+      
+        {attributes.map((attribute) => <option key={attribute.attributeid} value={attribute.value}> {attribute.label}</option>)}
       </select>
     </div>
       )}
